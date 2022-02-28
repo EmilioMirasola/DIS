@@ -16,6 +16,7 @@ public class TCPClient {
 
 		System.out.println("Hvis du vil tilføje et domæne, skriv da: 'tilmeld' + 'domænenavn' + 'ip adresse' ");
 		System.out.println("Ellers indtast et domæne du vil kontakte");
+		System.out.println("Ellers indtast 'domæner' for at få alle registrerede domæner");
 		while (true) {
 			String input = br.readLine();
 
