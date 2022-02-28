@@ -17,7 +17,7 @@ public class TcpDnsServer {
 		DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
 		map.put("Jeppe", "10.10.139.136");
-		map.put("Emilio", "10.10.131.94");
+		map.put("Emilio", "10.10.131.19");
 
 		while (true) {
 			String[] request = dataInputStream.readLine().split(" ");
