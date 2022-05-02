@@ -57,11 +57,7 @@ public class Gui extends Application {
 			}
 		});
 		btnscene2.setOnAction(e -> {
-			try {
-				ButtonClicked(e);
-			} catch (SQLException ex) {
-				throw new RuntimeException(ex);
-			}
+			this.thestage.setScene(scene1);
 		});
 		lblbrugernavn = new Label("Navn");
 		lblPassword = new Label("Password");
@@ -106,34 +102,36 @@ public class Gui extends Application {
 	}
 
 	public void ButtonClicked(ActionEvent e) throws SQLException {
+		String brugernavnText = userName.getText();
+		String pw = password.getText();
 		if (e.getSource() == btnLogin) {
-
-			String brugernavnText = userName.getText();
-			String pw = password.getText();
-
 			String SQL = "select brugerNavn,password from Bruger "
 					+ "where brugerNavn=" + String.format("'%s'", brugernavnText);
 
 
 			PreparedStatement preparedStatement = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);
 			ResultSet resultSet = preparedStatement.executeQuery();
-
+			boolean loggedIn = false;
 			while (resultSet.next()) {
 				String hashedPassword = getHashedPassword(pw);
 				if (resultSet.getString(1).equals(brugernavnText) && resultSet.getString(2).equals(hashedPassword)) {
+					loggedIn = true;
 					thestage.setScene(scene2);
 				}
 			}
+			if (!loggedIn) {
+				this.lblBesked.setText("Brugernavn eller password forkert");
+			}
 
 		} else if (e.getSource() == btnOpret) {
-			String SQL = "INSERT INTO Bruger(brugernavn,password) "
-					+ "VALUES(?,?)";
 
-			String brugernavnText = userName.getText();
-			String pw = password.getText();
+			if (brugernavnText.length() > 0 && pw.length() > 0) {
 
-			String hashedPassword = getHashedPassword(pw);
-			if (pw != null) {
+				String SQL = "INSERT INTO Bruger(brugernavn,password) "
+						+ "VALUES(?,?)";
+
+
+				String hashedPassword = getHashedPassword(pw);
 				PreparedStatement preparedStatement = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);
 				System.out.println("Oprettet " + hashedPassword);
 				lblBesked.setText("");
@@ -145,6 +143,8 @@ public class Gui extends Application {
 				password.clear();
 				userName.clear();
 				thestage.setScene(scene1);
+			} else {
+				this.lblBesked.setText("Du skal indtaste brugernavn og password");
 			}
 		}
 	}
