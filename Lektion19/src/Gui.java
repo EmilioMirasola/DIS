@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.*;
 
 public class Gui extends Application {
@@ -127,16 +128,17 @@ public class Gui extends Application {
 
 			if (brugernavnText.length() > 0 && pw.length() > 0) {
 
-				String SQL = "INSERT INTO Bruger(brugernavn,password) "
-						+ "VALUES(?,?)";
+				String SQL = "INSERT INTO Bruger(brugerNavn,password, salt) "
+						+ "VALUES(?,?,?)";
 
-
+				byte[] salt = generateSalt();
 				String hashedPassword = getHashedPassword(pw);
 				PreparedStatement preparedStatement = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);
 				System.out.println("Oprettet " + hashedPassword);
 				lblBesked.setText("");
 				preparedStatement.setString(1, brugernavnText);
 				preparedStatement.setString(2, hashedPassword);
+				preparedStatement.setBytes(3, salt);
 				preparedStatement.execute();
 				password.clear();
 				userName.clear();
@@ -152,14 +154,13 @@ public class Gui extends Application {
 	private String getHashedPassword(String pw) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
-
 			md.update(pw.getBytes());
 
 			byte[] bytes = md.digest();
 
 			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < bytes.length; i++) {
-				sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+			for (byte aByte : bytes) {
+				sb.append(Integer.toString((aByte & 0xff) + 0x100, 16).substring(1));
 			}
 
 			return sb.toString();
@@ -168,5 +169,12 @@ public class Gui extends Application {
 			exception.printStackTrace();
 		}
 		return null;
+	}
+
+	private byte[] generateSalt() {
+		SecureRandom random = new SecureRandom();
+		byte[] salt = new byte[8];
+		random.nextBytes(salt);
+		return salt;
 	}
 }
