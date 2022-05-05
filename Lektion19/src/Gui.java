@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.*;
+import java.util.Arrays;
 
 public class Gui extends Application {
 	Button btnLogin, btnOpret, btnscene2;
@@ -106,7 +107,7 @@ public class Gui extends Application {
 		String brugernavnText = userName.getText();
 		String pw = password.getText();
 		if (e.getSource() == btnLogin) {
-			String SQL = "select brugerNavn,password from Bruger "
+			String SQL = "select brugerNavn,password, salt from Bruger "
 					+ "where brugerNavn=" + String.format("'%s'", brugernavnText);
 
 
@@ -114,7 +115,8 @@ public class Gui extends Application {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			boolean loggedIn = false;
 			while (resultSet.next()) {
-				String hashedPassword = getHashedPassword(pw);
+				byte[] salt = resultSet.getBytes(3);
+				String hashedPassword = getHashedPassword(pw, salt);
 				if (resultSet.getString(1).equals(brugernavnText) && resultSet.getString(2).equals(hashedPassword)) {
 					loggedIn = true;
 					thestage.setScene(scene2);
@@ -132,7 +134,7 @@ public class Gui extends Application {
 						+ "VALUES(?,?,?)";
 
 				byte[] salt = generateSalt();
-				String hashedPassword = getHashedPassword(pw);
+				String hashedPassword = getHashedPassword(pw, salt);
 				PreparedStatement preparedStatement = connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);
 				System.out.println("Oprettet " + hashedPassword);
 				lblBesked.setText("");
@@ -151,10 +153,11 @@ public class Gui extends Application {
 		}
 	}
 
-	private String getHashedPassword(String pw) {
+	private String getHashedPassword(String pw, byte[] salt) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
 			md.update(pw.getBytes());
+			md.update(salt);
 
 			byte[] bytes = md.digest();
 
